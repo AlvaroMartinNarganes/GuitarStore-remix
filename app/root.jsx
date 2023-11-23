@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Meta, Links, Outlet, Scripts, LiveReload, useRouteError, isRouteErrorResponse, Link } from '@remix-run/react'
 import styles from './styles/index.css'
 import Header from './components/header'
@@ -40,11 +41,44 @@ export function links() {
     ]
 }
 
+//Vamos a usar context para usar estados globales, para ello al outlet le pasamos el context, el cual debe contener un objeto
 export default function App() {
+    const [carrito, setCarrito] = useState([])
+    const agregarCarrito = guitarra => {
+        if (carrito.some(guitarraState => guitarraState.id === guitarra.id)) {
+            //Como el producto ya existe, actualizamos el valor por si se ha equivocado
+            const carritoActualizado=carrito.map(guitarraActual=>{
+                if(guitarraActual.id=== guitarra.id){
+                    guitarraActual.cantidad=guitarra.cantidad
+                }
+                return guitarraActual
+            })
+            setCarrito(carritoActualizado)
+        } else {
+            setCarrito([...carrito, guitarra])
+
+        }
+    }
+
+    const actualizarCantidad=guitarra=>{
+        const carritoActualizado=carrito.map(guitar=>{
+            if(guitar.id===guitarra.id){
+                guitar.cantidad=guitarra.cantidad
+            }
+            return guitar
+        })
+
+        setCarrito(carritoActualizado)
+    }
+
     return (
         <Document>
             <Header />
-            <Outlet />
+            <Outlet context={{
+                agregarCarrito,
+                carrito,
+                actualizarCantidad
+            }} />
             <Footer />
         </Document>
     )
@@ -78,7 +112,7 @@ export function ErrorBoundary() {
                     {error.status} {error.statusText}
                     <Link className='error-enlace' to="/">Volver al inicio</Link>
                 </p>
-                <Footer/>
+                <Footer />
             </Document>
         )
     }
