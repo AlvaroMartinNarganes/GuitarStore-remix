@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Meta, Links, Outlet, Scripts, LiveReload, useRouteError, isRouteErrorResponse, Link } from '@remix-run/react'
 import styles from './styles/index.css'
 import Header from './components/header'
@@ -43,13 +43,21 @@ export function links() {
 
 //Vamos a usar context para usar estados globales, para ello al outlet le pasamos el context, el cual debe contener un objeto
 export default function App() {
-    const [carrito, setCarrito] = useState([])
+    const carritoLocal = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('carrito')) ?? [] : []; //Usamos lo de typeOf window porque esto se ejecuta en servidor y localstorage solo sirve en cliente
+    const [carrito, setCarrito] = useState(carritoLocal)
+
+    //Implementar localStorage
+    useEffect(() => {
+        localStorage.setItem('carrito', JSON.stringify(carrito))
+    }, [carrito])
+
+
     const agregarCarrito = guitarra => {
         if (carrito.some(guitarraState => guitarraState.id === guitarra.id)) {
             //Como el producto ya existe, actualizamos el valor por si se ha equivocado
-            const carritoActualizado=carrito.map(guitarraActual=>{
-                if(guitarraActual.id=== guitarra.id){
-                    guitarraActual.cantidad=guitarra.cantidad
+            const carritoActualizado = carrito.map(guitarraActual => {
+                if (guitarraActual.id === guitarra.id) {
+                    guitarraActual.cantidad = guitarra.cantidad
                 }
                 return guitarraActual
             })
@@ -60,14 +68,19 @@ export default function App() {
         }
     }
 
-    const actualizarCantidad=guitarra=>{
-        const carritoActualizado=carrito.map(guitar=>{
-            if(guitar.id===guitarra.id){
-                guitar.cantidad=guitarra.cantidad
+    const actualizarCantidad = guitarra => {
+        const carritoActualizado = carrito.map(guitar => {
+            if (guitar.id === guitarra.id) {
+                guitar.cantidad = guitarra.cantidad
             }
             return guitar
         })
 
+        setCarrito(carritoActualizado)
+    }
+
+    const eliminarGuitarra = id => {
+        const carritoActualizado = carrito.filter(guitar => guitar.id !== id)
         setCarrito(carritoActualizado)
     }
 
@@ -77,7 +90,8 @@ export default function App() {
             <Outlet context={{
                 agregarCarrito,
                 carrito,
-                actualizarCantidad
+                actualizarCantidad,
+                eliminarGuitarra
             }} />
             <Footer />
         </Document>
